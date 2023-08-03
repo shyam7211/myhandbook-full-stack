@@ -1,10 +1,10 @@
 const express = require("express");
+const router = express.Router();
 const User = require("../models/UserModel");
 const { body, validationResult } = require("express-validator");
-const router = express.Router();
+const fetchuser = require("../middleware/fetctuser");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const fetchuser = require("../middleware/fetctuser");
 
 
 const ACCESS_TOKEN_KEY = '1@3$5^7*9)-+';
@@ -39,6 +39,7 @@ router.post("/createuser", [
 
             const accessToken = jwt.sign({
                 user: {
+                    user_name: user.name,
                     user_id: user.id,
                     user_email: user.email
                 }
@@ -77,6 +78,7 @@ router.post("/login", [
         try {
             const accessToken = jwt.sign({
                 user: {
+                    user_name: user.name,
                     user_id: user.id,
                     user_email: user.email
                 }
