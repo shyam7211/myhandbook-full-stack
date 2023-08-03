@@ -49,4 +49,40 @@ router.post("/createuser", [
     }
 );
 
+//Authenticate a user using: POST "/api/auth/login". Doesn't require authentication
+router.post("/login", [
+    body("email", "Invalid email address").isEmail(),
+    body("password", "Password field is required.").exists(),
+    ],
+    async (req, res) => {
+        // For checking the error and telling about what is missing.
+        const error = validationResult(req);
+        if (!error.isEmpty()) {
+            return res.status(400).json({ error: error.array() });
+        }
+        const { email, password} = req.body;
+        let user = await User.findOne({email})
+        if(!user){
+            return res.status(400).json({error: "Please enter valid credentials."});
+        }
+        const validpassword = await bcrypt.compare(password, user.password);
+        console.log(password, user.password, validpassword);
+        if(!validpassword){
+            return res.status(400).json({error : "Please enter valid credentials."});
+        }
+        try {
+            const accessToken = jwt.sign({user:{
+                user_id: user.id,
+                user_email: user.email
+            }}, ACCESS_TOKEN_KEY);
+            
+            console.log(user);
+            res.status(201).json({ message: 'User logged in successfully', user, accessToken});
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).json({ error: 'Failed to login user' });
+        }
+    }
+)
+
 module.exports = router;
