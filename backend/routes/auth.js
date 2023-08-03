@@ -4,6 +4,8 @@ const { body, validationResult } = require("express-validator");
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const fetchuser = require("../middleware/fetctuser");
+
 
 const ACCESS_TOKEN_KEY = '1@3$5^7*9)-+';
 
@@ -14,7 +16,7 @@ router.post("/createuser", [
     body("password")
         .isLength({ min: 6 })
         .withMessage("Password must be at least 6 characters long"),
-    ],
+],
     async (req, res) => {
         // For checking the error and telling about what is missing.
         const error = validationResult(req);
@@ -23,9 +25,9 @@ router.post("/createuser", [
         }
         try {
             // Checking whether the user is existing with the email provided.
-            let user = await User.findOne({email: req.body.email});
-            if(user){
-                return res.status(400).json({message: "User already exists with this mail."})
+            let user = await User.findOne({ email: req.body.email });
+            if (user) {
+                return res.status(400).json({ message: "User already exists with this mail." })
             }
             // Creating the user.
             const salt = await bcrypt.genSalt(10);
@@ -35,13 +37,15 @@ router.post("/createuser", [
                 password: await bcrypt.hash(req.body.password, salt)
             });
 
-            const accessToken = jwt.sign({user:{
-                user_id: user.id,
-                user_email: user.email
-            }}, ACCESS_TOKEN_KEY);
-            
+            const accessToken = jwt.sign({
+                user: {
+                    user_id: user.id,
+                    user_email: user.email
+                }
+            }, ACCESS_TOKEN_KEY);
+
             console.log(user);
-            res.status(201).json({ message: 'User created successfully', user, accessToken});
+            res.status(201).json({ message: 'User created successfully', user, accessToken });
         } catch (error) {
             console.error(error.message);
             res.status(500).json({ error: 'Failed to create user' });
@@ -53,36 +57,51 @@ router.post("/createuser", [
 router.post("/login", [
     body("email", "Invalid email address").isEmail(),
     body("password", "Password field is required.").exists(),
-    ],
+],
     async (req, res) => {
         // For checking the error and telling about what is missing.
         const error = validationResult(req);
         if (!error.isEmpty()) {
             return res.status(400).json({ error: error.array() });
         }
-        const { email, password} = req.body;
-        let user = await User.findOne({email})
-        if(!user){
-            return res.status(400).json({error: "Please enter valid credentials."});
+        const { email, password } = req.body;
+        let user = await User.findOne({ email })
+        if (!user) {
+            return res.status(400).json({ error: "Please enter valid credentials." });
         }
         const validpassword = await bcrypt.compare(password, user.password);
         console.log(password, user.password, validpassword);
-        if(!validpassword){
-            return res.status(400).json({error : "Please enter valid credentials."});
+        if (!validpassword) {
+            return res.status(400).json({ error: "Please enter valid credentials." });
         }
         try {
-            const accessToken = jwt.sign({user:{
-                user_id: user.id,
-                user_email: user.email
-            }}, ACCESS_TOKEN_KEY);
-            
+            const accessToken = jwt.sign({
+                user: {
+                    user_id: user.id,
+                    user_email: user.email
+                }
+            }, ACCESS_TOKEN_KEY);
+
             console.log(user);
-            res.status(201).json({ message: 'User logged in successfully', user, accessToken});
+            res.status(201).json({ message: 'User logged in successfully', user, accessToken });
         } catch (error) {
             console.error(error.message);
             res.status(500).json({ error: 'Failed to login user' });
         }
     }
 )
+
+
+//Get loggedin user info using: POST "/api/auth/getuser". Require authentication
+router.post("/getuser", fetchuser, async (req, res) => {
+    try {
+        const user_id = req.user.user_id;
+        const user = await User.findById(user_id).select("-password");
+        res.json(user);
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+})
 
 module.exports = router;
