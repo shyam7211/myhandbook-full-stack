@@ -71,4 +71,25 @@ router.put('/updatenote/:id', fetchuser, async (req, res) => {
 )
 
 
+//Deleting note for of a user using: DELETE "/api/notes/deletenote". Require authentication
+router.delete('/deletenote/:id', fetchuser, async (req, res) => {
+        
+        try {
+            const note = await Note.findById(req.params.id);
+            if(!note){return res.status(404).json({error: "Note Not Found"})};
+
+            if(note.user_id.toString() !== req.user.user_id){
+                return res.status(401).json({error: "Unauthorized to update"})
+            }
+
+            const deletedNote = await Note.findByIdAndDelete(req.params.id);
+            res.json({message: "Note Deleted", deletedNote})
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+)
+
+
 module.exports = router;
