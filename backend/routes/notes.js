@@ -5,7 +5,7 @@ const { body, validationResult } = require("express-validator");
 const fetchuser = require("../middleware/fetctuser");
 
 
-//Fetching all the notes using: GET "/api/notes/fetchallnotes". Doesn't require authentication
+//Fetching all the notes using: GET "/api/notes/fetchallnotes". Require authentication
 router.get('/fetchallnotes', fetchuser, async (req, res) => {
 
     try {
@@ -19,7 +19,7 @@ router.get('/fetchallnotes', fetchuser, async (req, res) => {
 });
 
 
-//Creating notes for of a user using: POST "/api/notes/createnote". Doesn't require authentication
+//Creating notes for of a user using: POST "/api/notes/createnote". Require authentication
 router.post('/addnote', fetchuser, [
     body("title", "Enter a valid title.").isLength({ min: 3 }),
     body("description", "Description must have minimum of 5 characters.").isLength({ min: 5 })],
@@ -39,6 +39,36 @@ router.post('/addnote', fetchuser, [
         }
     });
 
+
+//Updating notes for of a user using: PUT "/api/notes/updatenote". Require authentication
+router.put('/updatenote/:id', fetchuser, async (req, res) => {
+        const { title, description, tag } = req.body;
+        let newNote = {};
+        if(title){newNote.title = title};
+        if(description){newNote.description = description};
+        if(tag){newNote.tag = tag};
+
+        try {
+            const note = await Note.findById(req.params.id);
+            if(!note){return res.status(404).json({error: "Note Not Found"})};
+
+            if(note.user_id.toString() !== req.user.user_id){
+                return res.status(401).json({error: "Unauthorized to update"})
+            }
+
+            const updatedNote = await Note.findByIdAndUpdate(
+                req.params.id,
+                newNote,
+                {new: true}
+            )
+            console.log(updatedNote);
+            res.json({message: "Note Updated", updatedNote})
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+)
 
 
 module.exports = router;
