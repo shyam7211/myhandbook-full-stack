@@ -17,6 +17,7 @@ const LogIn = () => {
         const json = await response.json();
         console.log(json);
         if(json.success){
+            localStorage.setItem('token',json.accessToken);
             navigate('/');
         } else {
             alert(json.error);
