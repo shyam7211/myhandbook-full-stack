@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 
 
 const ACCESS_TOKEN_KEY = '1@3$5^7*9)-+';
+let success = false;
 
 //Create a user using: POST "/api/auth/createuser". Doesn't require authentication
 router.post("/createuser", [
@@ -21,13 +22,13 @@ router.post("/createuser", [
         // For checking the error and telling about what is missing.
         const error = validationResult(req);
         if (!error.isEmpty()) {
-            return res.status(400).json({ error: error.array() });
+            return res.status(400).json({success, error: error.array() });
         }
         try {
             // Checking whether the user is existing with the email provided.
             let user = await User.findOne({ email: req.body.email });
             if (user) {
-                return res.status(400).json({ message: "User already exists with this mail." })
+                return res.status(400).json({success, message: "User already exists with this mail." })
             }
             // Creating the user.
             const salt = await bcrypt.genSalt(10);
@@ -46,10 +47,10 @@ router.post("/createuser", [
             }, ACCESS_TOKEN_KEY);
 
             console.log(user);
-            res.status(201).json({ message: 'User created successfully', user, accessToken });
+            res.status(201).json({success: true, message: 'User created successfully', user, accessToken });
         } catch (error) {
             console.error(error.message);
-            res.status(500).json({ error: 'Failed to create user' });
+            res.status(500).json({success, error: 'Failed to create user' });
         }
     }
 );
@@ -63,17 +64,17 @@ router.post("/login", [
         // For checking the error and telling about what is missing.
         const error = validationResult(req);
         if (!error.isEmpty()) {
-            return res.status(400).json({ error: error.array() });
+            return res.status(400).json({ success, error: error.array() });
         }
         const { email, password } = req.body;
         let user = await User.findOne({ email })
         if (!user) {
-            return res.status(400).json({ error: "Please enter valid credentials." });
+            return res.status(400).json({success, error: "Please enter valid credentials." });
         }
         const validpassword = await bcrypt.compare(password, user.password);
         console.log(password, user.password, validpassword);
         if (!validpassword) {
-            return res.status(400).json({ error: "Please enter valid credentials." });
+            return res.status(400).json({ success, error: "Please enter valid credentials." });
         }
         try {
             const accessToken = jwt.sign({
@@ -85,10 +86,10 @@ router.post("/login", [
             }, ACCESS_TOKEN_KEY);
 
             console.log(user);
-            res.status(201).json({ message: 'User logged in successfully', user, accessToken });
+            res.status(201).json({ success: true, message: 'User logged in successfully', user, accessToken });
         } catch (error) {
             console.error(error.message);
-            res.status(500).json({ error: 'Failed to login user' });
+            res.status(500).json({success, error: 'Failed to login user' });
         }
     }
 )
@@ -99,10 +100,10 @@ router.post("/getuser", fetchuser, async (req, res) => {
     try {
         const user_id = req.user.user_id;
         const user = await User.findById(user_id).select("-password");
-        res.json(user);
+        res.json({success: true, user});
     } catch (error) {
         console.error(error.message);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ success, error: 'Internal Server Error' });
     }
 })
 
