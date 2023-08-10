@@ -3,6 +3,7 @@ import NotesItem from './NotesItem'
 import noteContext from '../context/notes/noteContext'
 import AddNote from './AddNote';
 import alertContext from '../context/alert/alertContext';
+import { useNavigate } from 'react-router-dom';
 
 
 const Notes = () => {
@@ -13,9 +14,14 @@ const Notes = () => {
     const refClose = useRef(null);
     const alertcontext = useContext(alertContext);
     const {showAlert} = alertcontext;
+    const navigate = useNavigate();
     
     useEffect(() => {
-        getNotes();
+        if(localStorage.getItem('token')){
+            getNotes();
+        } else {
+            navigate('/login');
+        }
         // eslint-disable-next-line
     }, []);
 
