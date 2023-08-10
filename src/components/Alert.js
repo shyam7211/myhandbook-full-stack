@@ -13,7 +13,7 @@ export default function Alert() {
     return (
         alert && <div>
             <div className={`alert alert-${alert.type} alert-dismissible fade show`} role="alert">
-                <strong>{capitalize(alert.type)}:</strong> {alert.msg}.
+                <strong>{capitalize(alert.type === 'danger'?'error': alert.type)}:</strong> {alert.msg}.
                 {/* <button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> */}
             </div>
         </div>
