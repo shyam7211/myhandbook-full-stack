@@ -52,7 +52,7 @@ const NoteState = (props) => {
             }
         });
 
-        const json = response.json();
+        const json = await response.json();
         console.log(json);
         console.log('the notes', notes);
         const newNotes = notes.filter((note) => { return note._id !== id });
