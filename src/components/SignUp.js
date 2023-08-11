@@ -21,7 +21,7 @@ const SignUp = () => {
     const json = await response.json();
     console.log(json);
     if( password !== cpassword){
-      alert("Password and Confirm Password doesn't match.")
+      showAlert("Password and Confirm Password doesn't match.", 'danger');
     } else if(json.success){
       localStorage.setItem('token',json.accessToken);
       navigate('/');
